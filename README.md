@@ -1,4 +1,4 @@
-# set-calibration
+# set-scale-tool
 
 [![License MIT](https://img.shields.io/pypi/l/set-calibration.svg?color=green)](https://github.com/MontpellierRessourcesImagerie/set-calibration/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/set-calibration.svg?color=green)](https://pypi.org/project/set-calibration)
@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/MontpellierRessourcesImagerie/set-calibration/branch/main/graph/badge.svg)](https://codecov.io/gh/MontpellierRessourcesImagerie/set-calibration)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/set-calibration)](https://napari-hub.org/plugins/set-calibration)
 
-"A tool allowing to modify the calibration (physical units) of images"
+The tool allows to set the pixel size for x, y and z and and the physical unit of a layer.
 
 ----------------------------------
 
