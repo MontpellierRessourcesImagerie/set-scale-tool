@@ -3,25 +3,14 @@ display_name: "Calibration Tool"
 # use 'hidden' to remove plugin from napari hub search results
 visibility: public
 # see https://napari.org/stable/plugins/manifest.html for valid categories
-categories: ["Annotation", "Segmentation", "Acquisition"]
+categories: ["Measurement", "Transformations", "Visualization"]
+
+
 contributions:
   commands:
-    - id: set-calibration.make_container_widget
-      python_name: set_calibration:ImageThreshold
-      title: Make threshold Container widget
-    - id: set-calibration.make_magic_widget
-      python_name: set_calibration:threshold_magic_widget
-      title: Make threshold magic widget
-    - id: set-calibration.make_function_widget
-      python_name: set_calibration:threshold_autogenerate_widget
-      title: Make threshold function widget
+    - id: set-calibration.create_scale_panel
+      python_name: set_calibration:LayerScaleWidget
+      title: Instanciate a scale-edition panel.
   widgets:
-    - command: set-calibration.make_container_widget
-      display_name: Container Threshold
-    - command: set-calibration.make_magic_widget
-      display_name: Magic Threshold
-    - command: set-calibration.make_function_widget
-      autogenerate: true
-      display_name: Autogenerate Threshold
-    - command: set-calibration.make_qwidget
-      display_name: Example QWidget
+    - command: set-calibration.create_scale_panel
+      display_name: Scale Tool
