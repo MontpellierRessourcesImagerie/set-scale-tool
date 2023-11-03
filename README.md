@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/MontpellierRessourcesImagerie/set-calibration/branch/main/graph/badge.svg)](https://codecov.io/gh/MontpellierRessourcesImagerie/set-calibration)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/set-calibration)](https://napari-hub.org/plugins/set-calibration)
 
-The tool allows to set the pixel size for x, y and z and and the physical unit of a layer.
+The tool allows to set the voxel size for x, y and z and and the physical unit of a layer.
 
 ----------------------------------
 
