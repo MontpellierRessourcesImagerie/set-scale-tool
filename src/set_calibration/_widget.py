@@ -91,7 +91,7 @@ class LayerScaleWidget(QWidget):
                 self.scale_z_input.setVisible(False)
                 self.label_z.setVisible(False)
 
-            unit = layer.metadata.get('fr.cnrs.mri.cia.scale.unit', 'pixel')
+            unit = str(layer.units[0])
             self.unit_input.setText(unit)
             self.update_scale_bar(layer)
 
@@ -134,6 +134,7 @@ class LayerScaleWidget(QWidget):
 
             layer.scale = scale
             unit = self.unit_input.text()
+            layer.units = [unit] * layer.ndim
             layer.metadata['fr.cnrs.mri.cia.scale.unit'] = unit
             self.update_scale_bar(layer)
 
