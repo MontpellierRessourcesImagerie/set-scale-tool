@@ -1,9 +1,6 @@
 from typing import TYPE_CHECKING
 
-from magicgui import magic_factory
-from magicgui.widgets import CheckBox, Container, create_widget
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QWidget
-from skimage.util import img_as_float
 import numpy as np
 
 if TYPE_CHECKING:
