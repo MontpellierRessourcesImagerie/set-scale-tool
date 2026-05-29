@@ -24,7 +24,7 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
             "numpy",
-            "magicgui",
+            "auto-options-python",
             "qtpy",
             "scikit-image"
     ]
@@ -35,9 +35,9 @@ testing = [
     "pytest-cov",  # https://pytest-cov.readthedocs.io/en/latest/
     "pytest-qt",  # https://pytest-qt.readthedocs.io/en/latest/
     "napari",
-    "pyqt5",
+    "napari[qt]",
     "qtpy"
-    ]
+]
 
 [project.entry-points."napari.manifest"]
 set-scale-tool = "set_calibration:napari.yaml"
