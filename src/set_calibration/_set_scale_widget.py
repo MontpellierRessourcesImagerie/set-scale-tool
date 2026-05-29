@@ -131,11 +131,13 @@ class LayerScaleWidget(QWidget):
         return [unit if axis not in nonSpatialAxes else '' for axis in axes]
 
     def applyToAll(self):
+        self.widget._transferValues()
         self.apply(to_all=True)
 
     def apply(self, to_all=False):
         layers = self._getTargetLayers(to_all)
         ax = list(self.options.value("Axes"))
+        print("Settings axes:", ax)
         u = self.options.value("Unit")
         calib = {
             'X': self.options.value("X"),
