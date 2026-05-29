@@ -11,6 +11,11 @@ contributions:
     - id: set-calibration.create_scale_panel
       python_name: set_calibration:LayerScaleWidget
       title: Instanciate a scale-edition panel.
+    - id: set-calibration.split_channels
+      python_name: set_calibration:SplitChannelsWidget
+      title: Split channels of a layer into separate layers.
   widgets:
     - command: set-calibration.create_scale_panel
       display_name: Scale Tool
+    - command: set-calibration.split_channels
+      display_name: Split Channels
