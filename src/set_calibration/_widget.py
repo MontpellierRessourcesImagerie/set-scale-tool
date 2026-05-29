@@ -1,137 +1,134 @@
+from napari.utils.notifications import (
+    show_info, 
+    show_warning
+)
+from autooptions import OptionsWidget
+from autooptions.options import Options
+from qtpy.QtWidgets import (
+    QWidget,
+    QVBoxLayout
+)
 from typing import TYPE_CHECKING
-
-from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QWidget
-import numpy as np
 
 if TYPE_CHECKING:
     import napari
 
 
 class LayerScaleWidget(QWidget):
-
-    def __init__(self, napari_viewer):
+    def __init__(self, viewer: "napari.viewer.Viewer"):
         super().__init__()
-        self.viewer = napari_viewer
-        self.setLayout(QVBoxLayout())
+        self.viewer     = viewer
+        self.sameRowSet = set()
+        self.options    = self.getOptions()
+        self.operation  = None
+        self.widget     = self.createLayout()
+        self.viewer.layers.selection.events.changed.connect(self.onActiveLayerChanged)
 
-        # Labels and line edits for scale
-        self.active_layer_name = QLabel("- No active layer -")
-        self.layout().addWidget(self.active_layer_name)
+    def createLayout(self):
+        widget = OptionsWidget(
+            viewer=self.viewer, 
+            options=self.options, 
+            layout_type='vertical', 
+            client=self,
+            sameRowSet=self.sameRowSet
+        )
+        widget.addApplyButton(self.apply)
+        layout = QVBoxLayout()
+        layout.addWidget(widget)
+        self.setLayout(layout)
+        return widget
 
-        self.scale_x_input = QLineEdit()
-        self.scale_y_input = QLineEdit()
-        self.scale_z_input = QLineEdit()
-        self.unit_input = QLineEdit()
+    def getOptions(self):
+        options = Options("SetScaleTool", "SetScaleAxes")
+        options.addFloat("X", value=1.0)
+        options.addFloat("Y", value=1.0)
+        options.addFloat("Z", value=1.0)
+        options.addChoice("Unit", choices=["nm", "µm", "mm", "cm", "m"], value="µm")
+        options.addChoice("Axes", choices=[
+            "YX",
+            "CYX",
+            "YXC",
+            "ZYX",
+            "ZCYX",
+            "CZYX",
+            "TYX",
+            "TCYX",
+            "CTYX",
+            "TZYX",
+            "TCZYX",
+            "TZCYX"
+        ], value='YX')
+        options.addBool("Apply to all", value=True)
+        options.load()
+        self.sameRowSet = {"Y", "Z"}
+        return options
+    
+    def _getTargetLayers(self):
+        if self.options.value("Apply to all"):
+            return self.viewer.layers
+        else:
+            active_layer = self.viewer.layers.selection.active
+            return [active_layer] if active_layer else []
+        
+    def onActiveLayerChanged(self, event):
+        self.showCurrent()
+        self.updateViewersAxisLabels()
+        
+    def showCurrent(self):
+        l = self.viewer.layers.selection.active
+        if l is None:
+            return
+        axes = l.axis_labels
+        scales = l.scale
+        as_str = ", ".join(f"{a}: {s:.2f}" for a, s in zip(axes, scales))
+        show_info(as_str)
 
-        self.label_x = QLabel("Scale X:")
-        self.label_y = QLabel("Scale Y:")
-        self.label_z = QLabel("Scale Z:")
-        self.label_unit = QLabel("Unit:")
-
-        self.x_line = QHBoxLayout()
-        self.y_line = QHBoxLayout()
-        self.z_line = QHBoxLayout()
-        self.unit_line = QHBoxLayout()
-
-        # Add widgets to layout
-        self.x_line.addWidget(self.label_x)
-        self.x_line.addWidget(self.scale_x_input)
-        self.y_line.addWidget(self.label_y)
-        self.y_line.addWidget(self.scale_y_input)
-        self.z_line.addWidget(self.label_z)
-        self.z_line.addWidget(self.scale_z_input)
-        self.unit_line.addWidget(self.label_unit)
-        self.unit_line.addWidget(self.unit_input)
-
-        self.all_inputs = QVBoxLayout()
-
-        self.all_inputs.addLayout(self.x_line)
-        self.all_inputs.addLayout(self.y_line)
-        self.all_inputs.addLayout(self.z_line)
-        self.all_inputs.addLayout(self.unit_line)
-
-        # Buttons
-        # "Apply" -> Just to active
-        # "Apply to all" -> Apply to all selected layers.
-        self.apply_button = QPushButton("Apply")
-        self.apply_button.clicked.connect(self.apply_scale)
-        self.apply_to_selection_button = QPushButton("Apply to all")
-        self.apply_to_selection_button.clicked.connect(self.apply_scale_to_selection)
-
-        self.all_inputs.addWidget(self.apply_button)
-        self.all_inputs.addWidget(self.apply_to_selection_button)
-
-        self.layout().addLayout(self.all_inputs)
-
-        self.viewer.layers.selection.events.active.connect(self.update_active_layer)
-        self.update_active_layer()
-
-    def update_active_layer(self, event=None):
+    def updateViewersAxisLabels(self):
         layer = self.viewer.layers.selection.active
         if layer is None:
-            self.active_layer_name.setText("- No active layer -")
-            self.set_input_visibility(False)
-            self.viewer.scale_bar.visible = False
-        else:
-            self.active_layer_name.setText(layer.name)
-            self.set_input_visibility(True)
-            scale = layer.scale
-            self.scale_x_input.setText(str(scale[-1]))
-            self.scale_y_input.setText(str(scale[-2]))
+            return
+        self.viewer.dims.axis_labels = layer.axis_labels
 
-            # Check for 3D and 3D+t layers
-            if layer.ndim >= 3:
-                self.scale_z_input.setText(str(scale[-3]))
-                self.scale_z_input.setVisible(True)
-                self.label_z.setVisible(True)
+    def makeScalesVector(self, axes, calib):
+        vec = []
+        for axis in axes:
+            if axis in calib:
+                vec.append(calib[axis])
             else:
-                self.scale_z_input.setVisible(False)
-                self.label_z.setVisible(False)
+                vec.append(1.0)
+        return vec
+    
+    def makeUnitsVector(self, axes, unit):
+        nonSpatialAxes = {'T', 'C'}
+        return [unit if axis not in nonSpatialAxes else '' for axis in axes]
+    
+    def apply(self):
+        layers = self._getTargetLayers()
+        ax = list(self.options.value("Axes"))
+        u = self.options.value("Unit")
+        calib = {
+            'X': self.options.value("X"),
+            'Y': self.options.value("Y"),
+            'Z': self.options.value("Z"),
+            'T': 1.0,
+            'C': 1.0
+        }
 
-            unit = str(layer.units[0])
-            self.unit_input.setText(unit)
-            self.update_scale_bar(layer)
+        vec = self.makeScalesVector(ax, calib)
+        units = self.makeUnitsVector(ax, u)
 
-    def set_input_visibility(self, visible):
-        self.scale_x_input.setVisible(visible)
-        self.scale_y_input.setVisible(visible)
-        self.scale_z_input.setVisible(visible)
-        self.unit_input.setVisible(visible)
-
-        self.label_x.setVisible(visible)
-        self.label_y.setVisible(visible)
-        self.label_z.setVisible(visible)
-        self.label_unit.setVisible(visible)
-
-        self.apply_button.setVisible(visible)
-        self.apply_to_selection_button.setVisible(visible)
-
-    def update_scale_bar(self, layer):
-        self.viewer.scale_bar.unit = self.unit_input.text()
+        for layer in layers:
+            if layer.data.ndim != len(vec):
+                show_warning(f"Layer '{layer.name}' has {layer.data.ndim} dimensions, but {len(vec)} were provided. Skipping.")
+                continue
+            layer.scale = vec
+            layer.units = units
+            layer.axis_labels = ax
+            layer.metadata['fr.cnrs.mri.cia.scale.unit'] = u
+        
+        self.updateScaleBar(u)
+        self.updateViewersAxisLabels()
+    
+    def updateScaleBar(self, unit):
+        self.viewer.scale_bar.unit = unit
         self.viewer.scale_bar.visible = True
-
-    def apply_scale(self):
-        self._set_layer_scale(self.viewer.layers.selection.active)
-
-    def apply_scale_to_selection(self):
-        for layer in self.viewer.layers:
-            self._set_layer_scale(layer)
-
-    def _set_layer_scale(self, layer):
-        if layer:
-            scale_x = float(self.scale_x_input.text())
-            scale_y = float(self.scale_y_input.text())
-            scale = np.ones(layer.ndim)
-            scale[-1] = scale_x
-            scale[-2] = scale_y
-
-            if self.scale_z_input.isVisible():
-                scale_z = float(self.scale_z_input.text())
-                scale[-3] = scale_z
-
-            layer.scale = scale
-            unit = self.unit_input.text()
-            layer.units = [unit] * layer.ndim
-            layer.metadata['fr.cnrs.mri.cia.scale.unit'] = unit
-            self.update_scale_bar(layer)
-
