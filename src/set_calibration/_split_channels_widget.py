@@ -13,9 +13,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import napari
 
+from napari.layers.labels.labels import Labels
+from napari.layers.image.image import Image
 
 class SplitChannelsWidget(QWidget):
-    def __init__(self, viewer: "napari.viewer.Viewer"):
+    def __init__(self, viewer: "napari.viewer.Viewer"): # type: ignore
         super().__init__()
         self.viewer     = viewer
         self.sameRowSet = set()
@@ -46,9 +48,9 @@ class SplitChannelsWidget(QWidget):
     
     def _getTargetLayers(self):
         if self.options.value("Apply to all"):
-            return self.viewer.layers
+            return list(self.viewer.layers)
         else:
-            active_layer = self.viewer.layers.selection.active
+            active_layer = self.viewer.layers.selection
             return [active_layer] if active_layer else []
     
     def removeAxis(self, v, index):
@@ -96,6 +98,8 @@ class SplitChannelsWidget(QWidget):
         layers = self._getTargetLayers()
         toBeRemoved = set()
         for layer in layers:
+            if type(layer) not in [Image, Labels]:
+                continue
             if self.splitChannels(layer):
                 toBeRemoved.add(layer.name)
         self.removeLayers(toBeRemoved)

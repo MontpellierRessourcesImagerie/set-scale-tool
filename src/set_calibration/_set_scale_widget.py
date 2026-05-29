@@ -89,7 +89,7 @@ class LayerScaleWidget(QWidget):
     
     def _getTargetLayers(self, to_all=False):
         if to_all:
-            return self.viewer.layers
+            return list(self.viewer.layers)
         else:
             active_layer = self.viewer.layers.selection.active
             return [active_layer] if active_layer else []
@@ -107,7 +107,11 @@ class LayerScaleWidget(QWidget):
         axes = l.axis_labels
         scales = l.scale
         units = l.units
-        lens = l.data.shape
+        lens = (
+            l.data.shape 
+            if hasattr(l.data, "shape") and len(l.data.shape) == len(axes) 
+            else ["" for _ in axes]
+        )
         as_str =  "Axes: " + "   |   ".join(f"'{a}': {s:.2f} {format(u, '~')} ({l})" for a, s, u, l in zip(axes, scales, units, lens))
         self.infoLabel.setText(as_str)
 
