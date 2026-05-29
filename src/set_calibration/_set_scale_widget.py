@@ -124,6 +124,7 @@ class LayerScaleWidget(QWidget):
             layer.scale = vec
             layer.units = units
             layer.axis_labels = ax
+            layer.depiction = 'volume' if 'Z' in ax else 'plane'
             layer.metadata['fr.cnrs.mri.cia.scale.unit'] = u
         
         self.updateScaleBar(u)

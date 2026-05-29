@@ -69,6 +69,7 @@ class SplitChannelsWidget(QWidget):
         units = self.removeAxis(layer.units, c_axis)
         translate = self.removeAxis(layer.translate, c_axis)
         axis_labels = self.removeAxis(layer.axis_labels, c_axis)
+        depiction = 'volume' if 'Z' in layer.axis_labels else 'plane'
 
         self.viewer.add_image(
             data=data,
@@ -79,7 +80,8 @@ class SplitChannelsWidget(QWidget):
             name=name,
             channel_axis=c_axis,
             blending='additive',
-            axis_labels=axis_labels
+            axis_labels=axis_labels,
+            depiction=depiction
         )
         
         return True
