@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class LayerScaleWidget(QWidget):
-    def __init__(self, viewer: "napari.viewer.Viewer"):
+    def __init__(self, viewer: "napari.viewer.Viewer"): # type: ignore
         super().__init__()
         self.viewer     = viewer
         self.sameRowSet = set()
@@ -72,9 +72,10 @@ class LayerScaleWidget(QWidget):
         return options
     
     def updateAxesChoices(self):
-        _, w = self.widget.widgets.get("Axes", None)
+        w = self.widget.widgets.get("Axes", None)
         if w is None:
             return
+        _, w = w
         
         w.clear()
         l = self.viewer.layers.selection.active
@@ -82,7 +83,7 @@ class LayerScaleWidget(QWidget):
             w.addItems(["---"])
             return
         
-        ndims = l.data.ndim
+        ndims = len(l.axis_labels)
         axes = [a for a in self.getAxesPool() if len(a) == ndims]
         w.addItems(axes)
     
@@ -101,10 +102,13 @@ class LayerScaleWidget(QWidget):
     def showCurrent(self):
         l = self.viewer.layers.selection.active
         if l is None:
+            self.infoLabel.setText("")
             return
         axes = l.axis_labels
         scales = l.scale
-        as_str =  "   |   ".join(f"'{a}' ({i}): {s:.2f}" for i, (a, s) in enumerate(zip(axes, scales)))
+        units = l.units
+        lens = l.data.shape
+        as_str =  "Axes: " + "   |   ".join(f"'{a}': {s:.2f} {u} ({l})" for a, s, u, l in zip(axes, scales, units, lens))
         self.infoLabel.setText(as_str)
 
     def updateViewersAxisLabels(self):
@@ -145,8 +149,9 @@ class LayerScaleWidget(QWidget):
         units = self.makeUnitsVector(ax, u)
 
         for layer in layers:
-            if layer.data.ndim != len(vec):
-                show_warning(f"Layer '{layer.name}' has {layer.data.ndim} dimensions, but {len(vec)} were provided. Skipping.")
+            ndims = len(layer.axis_labels)
+            if len(ax) != ndims:
+                show_warning(f"Layer '{layer.name}' has {ndims} dimensions, but {len(ax)} were provided.")
                 continue
             layer.scale = vec
             layer.units = units
