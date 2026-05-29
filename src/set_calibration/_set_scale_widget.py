@@ -108,7 +108,7 @@ class LayerScaleWidget(QWidget):
         scales = l.scale
         units = l.units
         lens = l.data.shape
-        as_str =  "Axes: " + "   |   ".join(f"'{a}': {s:.2f} {u} ({l})" for a, s, u, l in zip(axes, scales, units, lens))
+        as_str =  "Axes: " + "   |   ".join(f"'{a}': {s:.2f} {format(u, '~')} ({l})" for a, s, u, l in zip(axes, scales, units, lens))
         self.infoLabel.setText(as_str)
 
     def updateViewersAxisLabels(self):
@@ -127,8 +127,11 @@ class LayerScaleWidget(QWidget):
         return vec
     
     def makeUnitsVector(self, axes, unit):
-        nonSpatialAxes = {'T', 'C'}
-        return [unit if axis not in nonSpatialAxes else '' for axis in axes]
+        nonSpatialAxes = {
+            'T': 's', 
+            'C': ''
+        }
+        return [unit if axis not in nonSpatialAxes else nonSpatialAxes[axis] for axis in axes]
 
     def applyToAll(self):
         self.widget._transferValues()
