@@ -77,15 +77,22 @@ class LayerScaleWidget(QWidget):
             return
         _, w = w
         
-        w.clear()
         l = self.viewer.layers.selection.active
         if l is None:
             w.addItems(["---"])
             return
         
+        maxLen = max([len(w.itemText(i)) for i in range(w.count())])
         ndims = len(l.axis_labels)
+        if maxLen == ndims:
+            return
+
+        current = w.currentText()
+        w.clear()
         axes = [a for a in self.getAxesPool() if len(a) == ndims]
         w.addItems(axes)
+        if current in axes:
+            w.setCurrentText(current)
     
     def _getTargetLayers(self, to_all=False):
         if to_all:
