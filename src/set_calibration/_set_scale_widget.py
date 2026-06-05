@@ -76,19 +76,16 @@ class LayerScaleWidget(QWidget):
         if w is None:
             return
         _, w = w
-        
-        l = self.viewer.layers.selection.active
-        if l is None:
-            w.addItems(["---"])
-            return
-        
-        maxLen = max([len(w.itemText(i)) for i in range(w.count())])
-        ndims = len(l.axis_labels)
-        if maxLen == ndims:
-            return
 
         current = w.currentText()
         w.clear()
+        
+        l = self.viewer.layers.selection.active
+        if l is None:
+            w.addItems([" "])
+            return
+        
+        ndims = len(l.axis_labels)
         axes = [a for a in self.getAxesPool() if len(a) == ndims]
         w.addItems(axes)
         if current in axes:
