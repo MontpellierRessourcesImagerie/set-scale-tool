@@ -1,6 +1,6 @@
 import numpy as np
 
-from set_calibration._widget import (
+from set_calibration._set_scale_widget import (
     LayerScaleWidget
 )
 
